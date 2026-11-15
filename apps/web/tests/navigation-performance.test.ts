@@ -38,7 +38,11 @@ const api=fakeApi((url,res,req)=>{
   hits.push(req.url!);
   if(p===failing){res.statusCode=503;return {code:'unavailable'};}
   if(p==='/api/site/search/suggestions')return {topics:[{slug:'openai',name:'OpenAI',group:'company'}],hot:[{rank:1,title:'建议版本 '+suggestionsVersion,to:'/story/fixture'}]};
-  if(p==='/api/site/topics')return {groups:[],topics:[{slug:'openai',name:'OpenAI',group:'company',definition:'Fixture',brand:null,total:0,recent:0,indexable:false,latest:null}]};
+  if(p==='/api/site/topics')return {groups:[{key:'field',name:'关注方向',blurb:''},{key:'company',name:'公司与模型',blurb:''}],topics:[
+    {slug:'openai',name:'OpenAI',group:'company',definition:'Fixture',brand:null,total:30,recent:2,indexable:true,latest:{title:'较早资讯',at:'2026-10-02T08:00:00Z'}},
+    {slug:'video',name:'AI视频',group:'field',definition:'视频动态',brand:null,total:10,recent:5,indexable:true,latest:{title:'最新视频资讯',at:'2026-10-04T08:00:00Z'}},
+    {slug:'deals',name:'优惠活动',group:'field',definition:'优惠条件',brand:null,total:0,recent:0,indexable:false,latest:null},
+  ]};
   if(p==='/api/site/hot')return {computedAt:at,windowHours:48,entries:[{rank:1,story:{publicId:'fixture',title:'建议版本 '+suggestionsVersion},heat:10,trend:'flat',trendPct:0,badges:[],participantCount:0,sourceCount:0,sourceNames:[],participants:[],spark:[],summary:null,latest:null,cover:null}]};
   if(p==='/api/site/timeline'){
     res.setHeader('X-Accel-Expires','@'+(Math.floor(Date.now()/1000)+ttl));
@@ -295,5 +299,34 @@ test('deep reading returns to its anchor, including folded dates',async()=>{
     await expect(page.locator('[data-card-key]')).toHaveCount(120);
     await expect.poll(()=>page.locator(`[data-card-key="${before.key}"]`).evaluate((e,top)=>Math.abs(e.getBoundingClientRect().top-top),before.top)).toBeLessThan(2);
     await expect(page.getByRole('button',{name:'展开10月4日',exact:true})).toBeVisible();
+  }finally{await context.close();}
+});
+
+
+test('topics preserve filtering and order across refresh, and switching order uses the shared response offline',async()=>{
+  const context=await chrome.newContext({viewport:{width:1280,height:900}});
+  const page=await context.newPage();
+  try{
+    await visit(page,origin+'/topics');
+    const links=page.getByRole('list',{name:'关注主题列表'}).getByRole('link');
+    await expect(links).toHaveCount(3);
+    await expect(links.nth(0)).toHaveAttribute('href','/topics/video');
+    await expect(links.nth(2)).toHaveAttribute('href','/topics/deals');
+    const first=await links.nth(0).boundingBox(),second=await links.nth(1).boundingBox();
+    assert.ok(first&&second&&second.x>first.x&&Math.abs(first.y-second.y)<2,'wide screens show two parallel topic rows');
+    await context.setOffline(true);
+    await page.getByLabel('主题排列方式').selectOption('total');
+    await expect(links.nth(0)).toHaveAttribute('href','/topics/openai');
+    await page.getByLabel('主题分类').selectOption('field');
+    await expect(links).toHaveCount(2);
+    await expect(links.nth(0)).toHaveAttribute('href','/topics/video');
+    await context.setOffline(false);
+    await page.reload();
+    await expect(page.getByLabel('主题排列方式')).toHaveValue('total');
+    await expect(page.getByLabel('主题分类')).toHaveValue('field');
+    await expect(links).toHaveCount(2);
+    await page.setViewportSize({width:393,height:852});
+    const phoneFirst=await links.nth(0).boundingBox(),phoneSecond=await links.nth(1).boundingBox();
+    assert.ok(phoneFirst&&phoneSecond&&phoneSecond.y>phoneFirst.y&&Math.abs(phoneFirst.x-phoneSecond.x)<2,'phones keep a readable single list');
   }finally{await context.close();}
 });

@@ -1,3 +1,5 @@
+{{> rules-personal-watch}}
+
 
 【AI 领域翻译规则 — 本平台 100% 是 AI/ML/LLM 行业内容，严格遵守】
 

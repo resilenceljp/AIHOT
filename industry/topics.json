@@ -1,14 +1,14 @@
 {
   "groups": [
     {
+      "key": "field",
+      "name": "关注方向",
+      "blurb": "AI资讯、AI视频、开源与Agent、优惠活动、机票旅行、金融市场"
+    },
+    {
       "key": "company",
       "name": "公司与模型",
       "blurb": "按厂商追踪模型、产品与公司动态"
-    },
-    {
-      "key": "field",
-      "name": "技术方向",
-      "blurb": "按技术领域深挖：Agent、多模态、具身智能……"
     },
     {
       "key": "genre",
@@ -17,6 +17,61 @@
     }
   ],
   "topics": [
+    {
+      "slug": "ai-news",
+      "name": "AI资讯",
+      "group": "field",
+      "tags": [
+        "AI资讯"
+      ],
+      "definition": "国内外 AI 模型、产品、研究和产业变化。"
+    },
+    {
+      "slug": "video",
+      "name": "AI 视频",
+      "group": "field",
+      "tags": [
+        "视频",
+        "AI视频"
+      ],
+      "definition": "AI 视频生成、编辑、模型、工作流与实测；同时保留原有视频主题的历史资料。"
+    },
+    {
+      "slug": "open-source-agents",
+      "name": "开源与Agent",
+      "group": "field",
+      "tags": [
+        "开源与Agent"
+      ],
+      "definition": "国内外 AI / Agent 开源项目、版本和部署实践。"
+    },
+    {
+      "slug": "deals",
+      "name": "优惠活动",
+      "group": "field",
+      "tags": [
+        "优惠活动"
+      ],
+      "definition": "有明确价格、有效期、适用对象与续费条件的公开优惠线索，购买前核对结账页。"
+    },
+    {
+      "slug": "gba-flights",
+      "name": "机票旅行",
+      "group": "field",
+      "tags": [
+        "机票旅行"
+      ],
+      "definition": "大湾区机场出发的航司特价公告和直播促销线索；不是实时最低价。"
+    },
+    {
+      "slug": "markets",
+      "name": "金融市场",
+      "group": "field",
+      "tags": [
+        "金融市场"
+      ],
+      "definition": "A股、港股、美股、黄金、外汇和加密资产的新闻与监管动态；不提供实时行情或买卖建议。"
+    },
     {
       "slug": "openai",
       "name": "OpenAI / ChatGPT",
@@ -60,7 +115,9 @@
       "name": "月之暗面 / Kimi",
       "group": "company",
       "entityId": "kimi",
-      "aliases": ["Kimi / 月之暗面"],
+      "aliases": [
+        "Kimi / 月之暗面"
+      ],
       "definition": "月之暗面的 Kimi 产品更新、K 系列开源模型与长文本技术进展。"
     },
     {
@@ -170,15 +227,6 @@
         "图像生成"
       ],
       "definition": "AI 画图与修图：文生图模型更新、图像编辑能力与创作工具。"
-    },
-    {
-      "slug": "video",
-      "name": "AI 视频",
-      "group": "field",
-      "tags": [
-        "视频"
-      ],
-      "definition": "AI 生成和理解视频：文生视频模型、视频编辑工具，以及影视创作的新做法。"
     },
     {
       "slug": "voice",

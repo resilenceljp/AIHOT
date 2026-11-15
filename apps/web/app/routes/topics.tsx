@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useSearchParams } from "react-router";
 import { SITE, subjectAfter, withSubject } from "@aihot/site";
 import type { Route } from "./+types/topics";
 import type { TopicSummary, TopicsResponse } from "@aihot/contracts/site";
@@ -6,6 +6,7 @@ import { apiGet, cachedPage } from "../lib/api.server";
 import { pageReuse } from "../lib/page-reuse";
 import { breadcrumbLd, pageMeta, siteUrl } from "../lib/seo";
 import { relativeTime } from "../lib/format";
+import { orderTopics, topicSort, TOPIC_SORTS } from "../lib/topic-order";
 import { IconChevronRight } from "../components/icons";
 import { IntentLink } from "../components/ui/IntentLink";
 import { BrandMark } from "../components/BrandMark";
@@ -15,7 +16,7 @@ import type { Screen } from "../components/shell/screens";
 
 export const handle: Screen = { home: navUp("/topics").tab, name: "主题" };
 export { pageHeaders as headers } from "../lib/api.server";
-export const { clientLoader, shouldRevalidate } = pageReuse<typeof loader>();
+export const { clientLoader, shouldRevalidate } = pageReuse<typeof loader>(() => "/topics");
 
 export async function loader({ request }: { request: Request }) {
   return cachedPage(300, await apiGet<TopicsResponse>("/api/site/topics", { signal: request.signal }));
@@ -25,7 +26,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return pageMeta({ title: SITE.topicsTitle, path: "/topics", image: "/og/pages/topics.png" });
   const { groups, topics } = loaderData;
   const by = groups.map((g) => g.name).join("、");
-  const indexed = topics.filter((t) => t.indexable);
+  const indexed = orderTopics(topics, "updated", groups).filter((t) => t.indexable);
   const named = indexed.slice(0, 6).map((t) => t.name.split(" / ")[0]).join("、");
   const base = siteUrl();
   return pageMeta({
@@ -53,80 +54,82 @@ export function meta({ loaderData }: Route.MetaArgs) {
   });
 }
 
-/** Phones: a row per topic in a grouped list; wider screens: a card per topic. */
-function TopicCard({ t }: { t: TopicSummary }) {
+/** A compact row, shared by both columns and the phone list. */
+function TopicCard({ t, groupName }: { t: TopicSummary; groupName: string }) {
   return (
     <IntentLink
       viewTransition
       to={`/topics/${t.slug}`}
-      className="group flex items-center gap-3 py-3 pl-4 pr-3 transition-colors active:bg-bg-sunk lg:card lg:card-hover lg:h-full lg:flex-col lg:items-stretch lg:gap-0 lg:px-5 lg:py-4 lg:active:bg-surface"
+      className="group flex h-full items-start gap-3 px-4 py-4 transition-colors hover:bg-bg-sunk active:bg-bg-sunk"
     >
-      {t.brand && (
-        <span className="flex shrink-0 lg:hidden">
-          <BrandMark brand={t.brand} size={30} />
+      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-tile border border-line-soft bg-bg-sunk text-[14px] font-semibold text-accent">
+        {t.brand ? <BrandMark brand={t.brand} size={30} /> : <span aria-hidden="true">{[...t.name][0]}</span>}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="text-[15px] font-semibold leading-6 text-ink group-hover:text-accent">{t.name}</span>
+          <span className="text-[11px] text-ink-4">{groupName}</span>
         </span>
-      )}
-      <span className="min-w-0 flex-1 lg:flex lg:flex-col">
-        <span className="flex items-center gap-2.5 text-[15.5px] font-semibold text-ink transition-colors group-hover:text-accent lg:text-[15px] lg:font-bold">
-          {t.brand && (
-            <span className="hidden lg:flex">
-              <BrandMark brand={t.brand} size={22} />
-            </span>
-          )}
-          {t.name}
-        </span>
-        <span className="mt-0.5 line-clamp-1 text-[12.5px] leading-[1.6] text-ink-4 lg:mt-1.5 lg:line-clamp-2 lg:flex-1 lg:text-[13px] lg:leading-[1.65] lg:text-ink-2">
+        <span className="mt-1 line-clamp-2 min-h-[40px] text-[12.5px] leading-5 text-ink-3">
           {t.latest?.title ?? t.definition}
         </span>
-        <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-ink-4 lg:mt-3 lg:justify-between">
-          {t.latest && <time dateTime={t.latest.at} suppressHydrationWarning>{relativeTime(t.latest.at)}</time>}
-          <span>
-            {t.recent > 0 ? (
-              <>
-                近 30 天 <span className="num font-semibold text-ink-3">{t.recent}</span> 条
-              </>
-            ) : (
-              "近 30 天暂无新精选"
-            )}
-          </span>
+        <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-ink-4">
+          {t.latest ? <time dateTime={t.latest.at} suppressHydrationWarning>{relativeTime(t.latest.at)}更新</time> : <span>暂无资讯</span>}
+          <span>近30天 <span className="num text-ink-3">{t.recent}</span> 条</span>
+          <span>累计 <span className="num">{t.total}</span> 条</span>
         </span>
       </span>
-      <IconChevronRight size={16} className="shrink-0 text-ink-4 lg:hidden" />
+      <IconChevronRight size={15} className="mt-1 shrink-0 text-ink-4" />
     </IntentLink>
   );
 }
 
 export default function TopicsPage() {
   const { groups, topics } = useLoaderData<typeof loader>();
+  const [params, setParams] = useSearchParams();
+  const sort = topicSort(params.get("sort"));
+  const group = groups.some((g) => g.key === params.get("group")) ? params.get("group")! : "all";
+  const visible = orderTopics(topics.filter((t) => group === "all" || t.group === group), sort, groups);
+  const change = (key: string, value: string, fallback: string) => setParams((previous) => {
+    const next = new URLSearchParams(previous);
+    if (value === fallback) next.delete(key); else next.set(key, value);
+    return next;
+  }, { replace: true, preventScrollReset: true });
   return (
     <div className="pb-10">
       <PhoneBar back={{ to: "/more", label: "我的" }} title="主题" />
       <header className="pb-2 pt-3 lg:pt-1">
-        <h1 data-page-title="" className="text-[24px] font-semibold leading-[1.3] text-ink">{subjectAfter("按主题看")}</h1>
+        <h1 data-page-title="" className="text-[24px] font-semibold leading-[1.3] text-ink">主题关注</h1>
         <p className="mt-1.5 text-[13px] leading-relaxed text-ink-3">
-          {`按${groups.map((g) => g.name).join("、")}浏览 `}
-          <span className="num">{topics.length}</span> 个主题，追踪最新精选与重要进展。
+          <span className="num">{topics.length}</span> 个主题，把值得看的新资讯放在前面。
         </p>
       </header>
-      {groups.map((g) => (
-        <section key={g.key} aria-labelledby={`topics-${g.key}`} className="pt-8">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-            <h2 id={`topics-${g.key}`} className="text-[15px] font-bold text-ink">
-              {g.name}
-            </h2>
-            <p className="text-[12px] text-ink-4">{g.blurb}</p>
-          </div>
-          <ul className="mt-3 divide-y divide-line-soft overflow-hidden rounded-card border border-line bg-surface lg:mt-3.5 lg:grid lg:grid-cols-3 lg:gap-3 lg:divide-y-0 lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent xl:grid-cols-4">
-            {topics
-              .filter((t) => t.group === g.key)
-              .map((t) => (
-                <li key={t.slug}>
-                  <TopicCard t={t} />
-                </li>
-              ))}
-          </ul>
-        </section>
-      ))}
+      <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-b border-line-soft pb-4">
+        <label className="flex items-center gap-2 text-[12px] text-ink-3">
+          分类
+          <select aria-label="主题分类" value={group} onChange={(e) => change("group", e.target.value, "all")} className="min-w-0 rounded-control border border-line bg-surface px-3 py-2 text-[13px] text-ink focus-visible:outline-accent">
+            <option value="all">全部主题</option>
+            {groups.map((g) => <option key={g.key} value={g.key}>{g.name}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-[12px] text-ink-3">
+          排列
+          <select aria-label="主题排列方式" value={sort} onChange={(e) => change("sort", e.target.value, "updated")} className="min-w-0 rounded-control border border-line bg-surface px-3 py-2 text-[13px] text-ink focus-visible:outline-accent">
+            {TOPIC_SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+      </div>
+      <p role="status" className="py-3 text-[12px] text-ink-4">
+        显示 {visible.length} 个主题 · {sort === "updated" ? "按最新精选资讯时间，从新到旧" : `按${TOPIC_SORTS.find((s) => s.value === sort)!.label}排列`}
+      </p>
+      <ul aria-label="关注主题列表" className="grid grid-cols-1 overflow-hidden rounded-card border border-line bg-surface md:grid-cols-2">
+        {visible.map((t) => (
+          <li key={t.slug} className="min-w-0 border-b border-line-soft last:border-b-0 md:odd:border-r">
+            <TopicCard t={t} groupName={groups.find((g) => g.key === t.group)?.name ?? t.group} />
+          </li>
+        ))}
+      </ul>
+      {visible.length === 0 && <p className="py-10 text-center text-[13px] text-ink-4">这个分类暂时没有主题。</p>}
     </div>
   );
 }

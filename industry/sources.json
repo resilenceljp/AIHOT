@@ -1,5 +1,5 @@
 {
-  "$comment": "示范信源：首次启动时导入（scripts/seed.ts），已存在的不会被覆盖。之后在后台“信源”里新建、修改和暂停。字段说明见 docs/customize.md。",
+  "$comment": "MyHOT 个人关注站信源；已有记录不覆盖。公开源仅摘要索引，不开通付费服务。机票价格、库存和直播价需另外核实。",
   "sources": [
     {
       "id": "rss-openai-news",
@@ -362,6 +362,196 @@
       "interval_minutes": 180,
       "tags": [
         "个人"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-qwen-agent",
+      "name": "Qwen Agent Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/QwenLM/Qwen-Agent/releases.atom",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "AI资讯",
+        "开源与Agent"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "owner_entity_id": "qwen"
+    },
+    {
+      "id": "watch-langgraph",
+      "name": "LangGraph Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/langchain-ai/langgraph/releases.atom",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "AI资讯",
+        "开源与Agent"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-autoloop",
+      "name": "Agent Autoloop Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/KKKKhazix/agent-autoloop/releases.atom",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "AI资讯",
+        "开源与Agent"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-dify",
+      "name": "Dify Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/langgenius/dify/releases.atom",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "AI资讯",
+        "开源与Agent"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-comfyui",
+      "name": "ComfyUI Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/Comfy-Org/ComfyUI/releases.atom",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "AI资讯",
+        "AI视频",
+        "开源与Agent"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-fed",
+      "name": "Federal Reserve Press Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.federalreserve.gov/feeds/press_all.xml",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "金融市场"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-ecb",
+      "name": "European Central Bank Press Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.ecb.europa.eu/rss/press.html",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "金融市场"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-cnbc",
+      "name": "CNBC Market Headlines",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T2",
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "金融市场"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "watch-hkexpress-offers",
+      "name": "香港快运官方旅行优惠",
+      "kind": "web_list",
+      "config": {
+        "url": "https://www.hkexpress.com/en/offers",
+        "parseMode": "html",
+        "itemSelector": "a[href^=\"/en/offers/\"]:has(h3)",
+        "linkSelector": "a",
+        "titleSelector": "h3",
+        "allowUrlPrefixes": [
+          "https://www.hkexpress.com/en/offers/"
+        ],
+        "detail": {
+          "maxFetches": 2
+        },
+        "_aihot": {
+          "initialBackfillLimit": 3
+        }
+      },
+      "tier": "T1",
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "机票旅行",
+        "优惠活动",
+        "大湾区"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
